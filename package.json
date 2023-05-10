@@ -1,0 +1,46 @@
+{
+  "author": "Christian Andreas Westgaard <cwe@enonic.com>",
+  "bugs": {
+    "url": "https://github.com/enonic-playground/esbuild-plugin-copy-with-hash/issues"
+  },
+  "dependencies": {
+    "@node-rs/xxhash": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.1.2",
+    "esbuild": "^0.17.18",
+    "q-i": "^2.0.1",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.4"
+  },
+  "description": "An esbuild plugin to copy files adding hash and making manifest.json",
+  "files": [
+    "lib/**/*"
+  ],
+  "keywords": [
+    "esbuild",
+    "copy",
+    "files",
+    "asset hash",
+    "manifest",
+    "cache bust",
+    "contenthash"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "name": "esbuild-plugin-copy-with-hash",
+  "peerDependencies": {
+    "esbuild": "~0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/enonic-playground/esbuild-plugin-copy-with-hash.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf lib",
+    "prepack": "yarn run build"
+  },
+  "types": "lib/index.d.ts",
+  "version": "0.0.1-SNAPSHOT"
+}
