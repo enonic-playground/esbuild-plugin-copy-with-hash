@@ -1,5 +1,4 @@
 import { xxh3 } from '@node-rs/xxhash';
-import bytes from 'bytes';
 import {
 	BuildResult,
 	Plugin,
@@ -20,11 +19,14 @@ import {
 	join,
 	relative,
 } from 'path';
+import { createLogger } from './log';
+import { reportSize } from './reportSize';
 // @ts-ignore
 // import { print } from 'q-i';
 
 
 interface CopyWithHashPluginOptions {
+	hash?: (fileBuffer: Buffer) => string
 	manifestFilePath?: string | ((options: PluginBuild['initialOptions']) => string)
 	patterns: {
 		context?: string
@@ -37,16 +39,16 @@ const PLUGIN_NAME = 'copy-files-with-hash';
 const BASE_36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 
-function bigint2base(x: bigint, b: string ) {
+function bigint2base(bigint: bigint, base: string) {
 
-	let base = BigInt( b.length );
+	let bib = BigInt( base.length );
 	let result = '';
 
-	while ( 0 < x ) {
-		result = b.charAt( Number( x % base ) ) + result;
-		x = x / base;
+	while ( 0 < bigint ) {
+		result = base.charAt( Number( bigint % bib ) ) + result;
+		bigint = bigint / bib;
 	}
-
+	// print({result, length: result.length});
 	return result || '0';
 }
 
@@ -56,12 +58,14 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 	setup(build: PluginBuild) {
 		// print({options}, { maxItems: Infinity });
 		// const absWorkingDir = process.cwd();
+		const format = build.initialOptions.define?.['TSUP_FORMAT'].replace(/"/g,'').toUpperCase() || '';
+		const logger = createLogger(PLUGIN_NAME);
 		const {
+			hash = (fileBuffer: Buffer) => bigint2base(xxh3.xxh64(fileBuffer), BASE_36),
 			manifestFilePath,
 			patterns,
 		} = options;
 		// print({absWorkingDir}, { maxItems: Infinity });
-		const format = build.initialOptions.define?.['TSUP_FORMAT'].replace(/"/g,'').toUpperCase() || '';
 		const tasks: Record<string,{
 			outDir: string,
 			rel?: string
@@ -105,7 +109,6 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 
 		build.onEnd((result: BuildResult) => {
 			// print({initialOptions: build.initialOptions}, { maxItems: Infinity });
-			// print({metafile: result.metafile}, { maxItems: Infinity });
 
 			// Only proceed if the build result does not have any errors.
 			if (result.errors.length > 0) {
@@ -122,6 +125,7 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 			// print({manifestObj}, { maxItems: Infinity });
 
 			const keys = Object.keys(tasks);
+			const files: Record<string,number> = {};
 			for (let i = 0; i < keys.length; i++) {
 				const src = keys[i];
 				const {
@@ -131,65 +135,24 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 				// print({ src, outDir, rel }, { maxItems: Infinity });
 
 				const fileBuffer = readFileSync(src);
-				// if (result.metafile) {
-				// 	result.metafile.inputs[src] = {
-				// 		bytes: statSync(src).size,
-				// 		imports: []
-				// 	};
-				// }
-
-				const bigInt = xxh3.xxh64(fileBuffer);
-				const base36Digest = bigint2base(bigInt, BASE_36);
+				const contenthash = hash(fileBuffer);
 				const ext = extname(src);
 				const filebase = basename(src, ext);
-				const outFileName = `${filebase}-${base36Digest}${ext}`;
+				const outFileName = `${filebase}-${contenthash}${ext}`;
 				const outFilePath = join(outDir,outFileName);
 				// print({ ext, filebase, outFileName, outFilePath }, { maxItems: Infinity });
 
 				if (existsSync(outFilePath)) {
-					const fileBuffer2 = readFileSync(src);
-					const bigInt2 = xxh3.xxh64(fileBuffer2);
-					const base36Digest2 = bigint2base(bigInt2, BASE_36);
-					if (base36Digest !== base36Digest2) {
-						// console.debug(`${format} CPY updating ${rel||src} digest:${base36Digest} changed:${base36Digest2}`);
+					const contenthash2 = hash(readFileSync(src));
+					if (contenthash !== contenthash2) {
+						logger.warn(`${format} updating ${rel||src} contenthash:${contenthash} changed:${contenthash2}`);
 						writeFileSync(outFilePath, fileBuffer);
 					// } else {
-					// 	console.debug(`${format} CPY skipping ${rel||src} digest:${base36Digest} unchanged`);
-					// 	// const location = {
-					// 	// 	column: 0,
-					// 	// 	file: 'file',
-					// 	// 	length: 0,
-					// 	// 	line: 0,
-					// 	// 	lineText: 'lineText',
-					// 	// 	namespace: 'namespace',
-					// 	// 	suggestion: 'suggestion'
-					// 	// };
-					// 	// result.warnings.push({
-					// 	// 	detail: 'detail',
-					// 	// 	id: 'id',
-					// 	// 	location,
-					// 	// 	notes: [{
-					// 	// 		location,
-					// 	// 		text: 'note text'
-					// 	// 	}],
-					// 	// 	pluginName: PLUGIN_NAME,
-					// 	// 	text: 'text'
-					// 	// });
+					// 	logger.info(`${format} skipping ${rel||src} contenthash:${contenthash} unchanged`);
 					}
 				} else {
 					writeFileSync(outFilePath, fileBuffer);
-					console.info(`${format} CPY ${outFilePath} ${bytes(statSync(outFilePath).size)}`);
-					// result.outputFiles?.push({
-					// 	contents:
-					// })
-					// if (result.metafile) {
-					// 	result.metafile.outputs[outFilePath] = {
-					// 		imports: [],
-					// 		exports: [],
-					// 		inputs: {},
-					// 		bytes: statSync(outFilePath).size
-					// 	};
-					// }
+					files[outFilePath] = statSync(outFilePath).size;
 				}
 
 				if (rel) {
@@ -198,6 +161,7 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 					manifestObj[src] = join(dirname(src), outFileName);
 				}
 			} // for
+			reportSize(logger, format, files);
 
 			writeFileSync(mfFP, JSON.stringify(manifestObj, null, 2));
 			// print({manifestObj}, { maxItems: Infinity });
