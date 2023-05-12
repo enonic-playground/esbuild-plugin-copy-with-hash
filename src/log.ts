@@ -1,5 +1,5 @@
-import util from 'util';
-import { parentPort, isMainThread } from 'worker_threads';
+// import util from 'util';
+// import { parentPort, isMainThread } from 'worker_threads';
 import * as colors from 'colorette';
 
 
@@ -39,33 +39,33 @@ export function setSilent(isSilent?: boolean) {
 	silent = !!isSilent;
 }
 
-export function getSilent() {
-	return silent;
-}
+// export function getSilent() {
+// 	return silent;
+// }
 
 export type Logger = ReturnType<typeof createLogger>;
 
 export const createLogger = (name?: string) => {
 	return {
-		setName(_name: string) {
-			name = _name
-		},
+		// setName(_name: string) {
+		// 	name = _name
+		// },
 
 		success(label: string, ...args: any[]) {
 			return this.log(label, 'success', ...args)
 		},
 
-		info(label: string, ...args: any[]) {
-			return this.log(label, 'info', ...args)
-		},
+		// info(label: string, ...args: any[]) {
+		// 	return this.log(label, 'info', ...args)
+		// },
 
-		error(label: string, ...args: any[]) {
-			return this.log(label, 'error', ...args)
-		},
+		// error(label: string, ...args: any[]) {
+		// 	return this.log(label, 'error', ...args)
+		// },
 
-		warn(label: string, ...args: any[]) {
-			return this.log(label, 'warn', ...args)
-		},
+		// warn(label: string, ...args: any[]) {
+		// 	return this.log(label, 'warn', ...args)
+		// },
 
 		log(
 			label: string,
@@ -77,27 +77,27 @@ export const createLogger = (name?: string) => {
 				...data.map((item) => colorize(type, item, true)),
 			]
 			switch (type) {
-				case 'error': {
-					if (!isMainThread) {
-						parentPort?.postMessage({
-						type: 'error',
-						text: util.format(...args),
-						})
-						return;
-					}
+				// case 'error': {
+				// 	if (!isMainThread) {
+				// 		parentPort?.postMessage({
+				// 		type: 'error',
+				// 		text: util.format(...args),
+				// 		})
+				// 		return;
+				// 	}
 
-					return console.error(...args);
-				}
+				// 	return console.error(...args);
+				// }
 				default:
 					if (silent) return;
 
-					if (!isMainThread) {
-						parentPort?.postMessage({
-							type: 'log',
-							text: util.format(...args),
-						})
-						return;
-					}
+					// if (!isMainThread) {
+					// 	parentPort?.postMessage({
+					// 		type: 'log',
+					// 		text: util.format(...args),
+					// 	})
+					// 	return;
+					// }
 
 					console.log(...args)
 			}

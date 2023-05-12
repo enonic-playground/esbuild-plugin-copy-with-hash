@@ -1,9 +1,14 @@
-{
+{ // https://www.typescriptlang.org/tsconfig
 	"compilerOptions": {
+		"baseUrl": ".",
+		"allowJs": false,
+		// "allowSyntheticDefaultImports": true,
 		"declaration": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
-    	"module": "commonjs",
+		// "importHelpers": true,
+		"module": "CommonJS",
+		// "moduleResolution": "node",
 		"outDir": "./lib/",
 		"skipLibCheck": true,
 		"target": "ES2017",
@@ -26,5 +31,8 @@
 		// "noUncheckedIndexedAccess": true,            /* Include 'undefined' in index signature results */
 		"noPropertyAccessFromIndexSignature": true,  /* Require undeclared properties from index signatures to use element accesses. */
 	},
-	"include": ["src/**/*"]
+	"include": ["src/**/*.ts"],
+	// "exclude": [
+	// 	"node_modules"
+	// ],
 }

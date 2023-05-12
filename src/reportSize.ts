@@ -2,7 +2,7 @@ import * as colors from 'colorette';
 import { Logger } from './log';
 
 
-const prettyBytes = (bytes: number) => {
+export const prettyBytes = (bytes: number) => {
 	if (bytes === 0) return '0 B';
 	const unit = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 	const exp = Math.floor(Math.log(bytes) / Math.log(1024));
