@@ -52,7 +52,7 @@ describe('copyWithHashPlugin', () => {
 			context: 'node_modules',
 			manifest: 'myManifest.json',
 			patterns: [
-				'esbuild/**/*.js',
+				'esbuild/*.js',
 			],
 			to: 'subDir',
 		}));
@@ -65,7 +65,7 @@ describe('copyWithHashPlugin', () => {
 			manifest: 'myManifest.json',
 			patterns: [{
 				context: 'esbuild',
-				from: '**/*.js',
+				from: '*.js',
 				to: 'esbuild'
 			}],
 		}));
@@ -75,14 +75,14 @@ describe('copyWithHashPlugin', () => {
 	test('it should throw an error when there are no source files', async () => {
 		expect.assertions(2);
 		await expect(require('esbuild').build(buildOptions({
-			patterns: ['nonExistant/**/*.js']
+			patterns: ['nonExistant/*.js']
 		}))).rejects.toThrow(/No files found!/);
 		expect(existsSync('test/output/manifest.json')).toBe(false);
 	});
 
 	test('it should do nothing when mtime is unchanged', async () => {
 		await require('esbuild').build(buildOptions({
-			patterns: [ 'node_modules/esbuild/**/*.js' ]
+			patterns: [ 'node_modules/esbuild/*.js' ]
 		}));
 		expect(existsSync('test/output/manifest.json')).toBe(true);
 		const buffer = readFileSync('test/output/manifest.json');
@@ -93,7 +93,7 @@ describe('copyWithHashPlugin', () => {
 		const before = statSync(path).mtime.getTime();
 
 		await require('esbuild').build(buildOptions({
-			patterns: [ 'node_modules/esbuild/**/*.js' ]
+			patterns: [ 'node_modules/esbuild/*.js' ]
 		}));
 		const after = statSync(path).mtime.getTime();
 		expect(after).toBe(before);
@@ -101,7 +101,7 @@ describe('copyWithHashPlugin', () => {
 
 	test('it should update when mtime is changed', async () => {
 		await require('esbuild').build(buildOptions({
-			patterns: [ 'node_modules/esbuild/**/*.js' ]
+			patterns: [ 'node_modules/esbuild/*.js' ]
 		}));
 		expect(existsSync('test/output/manifest.json')).toBe(true);
 		const buffer = readFileSync('test/output/manifest.json');
@@ -116,7 +116,7 @@ describe('copyWithHashPlugin', () => {
 		expect(touched).not.toBe(before);
 
 		await require('esbuild').build(buildOptions({
-			patterns: [ 'node_modules/esbuild/**/*.js' ]
+			patterns: [ 'node_modules/esbuild/*.js' ]
 		}));
 		const after = statSync(path).mtime.getTime();
 		expect(after).toBe(before); // Same as source file
@@ -127,7 +127,7 @@ describe('copyWithHashPlugin', () => {
 		await expect(
 			require('esbuild').build(
 				buildOptions(
-					{ patterns: [ 'node_modules/esbuild/**/*.js' ] },
+					{ patterns: [ 'node_modules/esbuild/*.js' ] },
 					{ entryPoints: ['test/example-with-error.js'] }
 				)
 			)
@@ -138,7 +138,7 @@ describe('copyWithHashPlugin', () => {
 	test('it should get format from tsup', async () => {
 		await require('esbuild').build(
 			buildOptions(
-				{ patterns: [ 'node_modules/esbuild/**/*.js' ] },
+				{ patterns: [ 'node_modules/esbuild/*.js' ] },
 				{
 					define: {
 						TSUP_FORMAT: '"esm"'
@@ -152,7 +152,7 @@ describe('copyWithHashPlugin', () => {
 	test('it should get outdir from outfile', async () => {
 		await require('esbuild').build(
 			buildOptions(
-				{ patterns: [ 'node_modules/esbuild/**/*.js' ] },
+				{ patterns: [ 'node_modules/esbuild/*.js' ] },
 				{
 					outdir: undefined,
 					outfile: 'test/output/whatever.js'
@@ -166,7 +166,7 @@ describe('copyWithHashPlugin', () => {
 		await require('esbuild').build(
 			buildOptions({
 				manifest: 'mymanifest.json',
-				patterns: [ 'node_modules/esbuild/**/*.js' ]
+				patterns: [ 'node_modules/esbuild/*.js' ]
 			})
 		);
 		expect(existsSync('test/output/mymanifest.json')).toBe(true);
@@ -179,7 +179,7 @@ describe('copyWithHashPlugin', () => {
 					manifest: (options) => {
 						return `manifest.${options.define?.['TSUP_FORMAT'].replace(/"/g,'')}.json`
 					},
-					patterns: [ 'node_modules/esbuild/**/*.js' ]
+					patterns: [ 'node_modules/esbuild/*.js' ]
 				}, {
 					define: {
 						TSUP_FORMAT: '"esm"'
@@ -196,7 +196,7 @@ describe('copyWithHashPlugin', () => {
 			require('esbuild').build(
 				buildOptions({
 					manifest: '',
-					patterns: [ 'node_modules/esbuild/**/*.js' ]
+					patterns: [ 'node_modules/esbuild/*.js' ]
 				})
 			)
 		).rejects.toThrow(/manifest option malformed!/);
@@ -209,7 +209,7 @@ describe('copyWithHashPlugin', () => {
 			require('esbuild').build(
 				buildOptions({
 					manifest: () => '',
-					patterns: [ 'node_modules/esbuild/**/*.js' ]
+					patterns: [ 'node_modules/esbuild/*.js' ]
 				})
 			)
 		).rejects.toThrow(/manifest option malformed!/);
@@ -220,7 +220,7 @@ describe('copyWithHashPlugin', () => {
 		await require('esbuild').build(
 			buildOptions(
 				{
-					patterns: [ 'node_modules/esbuild/**/*.js' ]
+					patterns: [ 'node_modules/esbuild/*.js' ]
 				}, {
 					logLevel: undefined,
 					logLimit: undefined
