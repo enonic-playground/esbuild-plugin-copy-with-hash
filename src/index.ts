@@ -7,6 +7,7 @@ import {
 	BuildResult,
 	Plugin,
 } from 'esbuild';
+import {sync} from 'fast-glob';
 import {
 	cpSync,
 	existsSync,
@@ -15,7 +16,7 @@ import {
 	readFileSync,
 	writeFileSync,
 } from 'fs';
-import { globSync } from 'glob';
+// import { globSync } from 'glob';
 import {
 	basename,
 	dirname,
@@ -82,7 +83,16 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 			}
 			const fromGlob = join(absWorkingDir, rootContext, context, from);
 			logger.info('fromGlob', fromGlob);
-			const files = globSync(fromGlob, {absolute: false});
+			//const files = globSync(fromGlob, {absolute: false});
+			const files = sync(fromGlob
+				// , {
+				// 	absolute: false, // false by default
+				// 	caseSensitiveMatch: true, // true by default
+				// 	globstar: true, // true by default
+				// 	onlyFiles: true, // true by default
+				// 	unique: true, // true by default
+				// }
+			);
 			logger.info('files', files);
 			if (!files.length) {
 				throw new Error(`No files found! from:${from}`);
