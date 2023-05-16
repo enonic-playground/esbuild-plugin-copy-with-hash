@@ -38,6 +38,7 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 	name: PLUGIN_NAME,
 	setup(build: PluginBuild) {
 		const {
+			absWorkingDir = process.cwd(),
 			outdir,
 			outfile,
 			logLevel
@@ -79,8 +80,10 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 				from = value.from;
 				if (value.to) to = value.to;
 			}
-			const fromGlob = join(rootContext, context, from);
+			const fromGlob = join(absWorkingDir, rootContext, context, from);
+			logger.info('fromGlob', fromGlob);
 			const files = globSync(fromGlob, {absolute: false});
+			logger.info('files', files);
 			if (!files.length) {
 				throw new Error(`No files found! from:${from}`);
 			}

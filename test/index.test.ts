@@ -12,7 +12,7 @@ import {
 	utimesSync,
 } from 'fs';
 import { join } from 'path';
-import mockConsole from 'jest-mock-console';
+// import mockConsole from 'jest-mock-console';
 import { rimrafSync } from 'rimraf';
 import copyWithHashPlugin from '../src/index';
 
@@ -30,7 +30,7 @@ function buildOptions(pluginOptions: CopyWithHashPluginOptions, overrideBuildOpt
 	return {...defaultBuildOptions, ...overrideBuildOptions};
 };
 
-mockConsole();
+// mockConsole();
 
 describe('copyWithHashPlugin', () => {
 
