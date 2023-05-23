@@ -27,7 +27,7 @@ import {
 	extname,
 	join,
 	relative,
-} from 'path';
+} from 'path/posix';
 // import { print } from 'q-i';
 import bigint2base from './bigint2base';
 import { createLogger, setSilent } from './log';
@@ -107,7 +107,7 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 			// );
 			logger.info('files', files);
 			if (!files.length) {
-				throw new Error(`No files found! from:${from}`);
+				throw new Error(`No files found! fromGlob:${fromGlob}`);
 			}
 			inner: for (let j = 0; j < files.length; j++) {
 				const file = files[j];
