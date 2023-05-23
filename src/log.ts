@@ -55,9 +55,9 @@ export const createLogger = (name?: string) => {
 			return this.log(label, 'success', ...args)
 		},
 
-		info(label: string, ...args: any[]) {
-			return this.log(label, 'info', ...args)
-		},
+		// info(label: string, ...args: any[]) {
+		// 	return this.log(label, 'info', ...args)
+		// },
 
 		// error(label: string, ...args: any[]) {
 		// 	return this.log(label, 'error', ...args)

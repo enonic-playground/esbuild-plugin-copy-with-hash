@@ -4,7 +4,6 @@ import type { CopyWithHashPluginOptions } from './index.d';
 
 // import { xxh3 } from '@node-rs/xxhash'; // Didn't work on windows :(
 import { XXH64 } from 'xxh3-ts';
-// import { bundleRequire } from 'bundle-require';
 import {
 	BuildResult,
 	Plugin,
@@ -20,7 +19,6 @@ import {
 } from 'fs';
 // import { globSync } from 'glob';
 import { globbySync } from '@cjs-exporter/globby';
-// import { globbySync } from '../node_modules/globby/index.js';
 import {
 	basename,
 	dirname,
@@ -33,12 +31,6 @@ import bigint2base from './bigint2base';
 import { createLogger, setSilent } from './log';
 import { reportSize } from './reportSize';
 
-// const { globbySync } = require('../node_modules/globby/index');
-// const { mod: {
-// 	globbySync
-// } } = (await bundleRequire({
-// 	filepath: '../node_modules/globby/index.js',
-// })).mod.globbySync;
 
 const PLUGIN_NAME = 'copy-files-with-hash';
 const MANIFEST_DEFAULT = 'manifest.json';
@@ -93,8 +85,8 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 			}
 			// const fromGlob = join(absWorkingDir, rootContext, context, from);
 			const fromGlob = join(rootContext, context, from);
-			logger.info('fromGlob', fromGlob);
-			//const files = globSync(fromGlob, {absolute: false});
+			// logger.info('fromGlob', fromGlob);
+			// const files = globSync(fromGlob, {absolute: false});
 			const files = globbySync(fromGlob, {absolute: false});
 			// const files = sync(fromGlob
 			// 	// , {
@@ -105,7 +97,7 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 			// 	// 	unique: true, // true by default
 			// 	// }
 			// );
-			logger.info('files', files);
+			// logger.info('files', files);
 			if (!files.length) {
 				throw new Error(`No files found! fromGlob:${fromGlob}`);
 			}
