@@ -1,12 +1,12 @@
 { // https://www.typescriptlang.org/tsconfig
 	"compilerOptions": {
 		"baseUrl": ".",
-		"allowJs": false,
+		"allowJs": true,
 		// "allowSyntheticDefaultImports": true,
 		"declaration": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
-		// "importHelpers": true,
+		"importHelpers": true,
 		"module": "CommonJS",
 		// "moduleResolution": "node",
 		"outDir": "./lib/",
