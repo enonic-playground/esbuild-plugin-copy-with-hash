@@ -1,7 +1,7 @@
 {
   "author": "Christian Andreas Westgaard <cwe@enonic.com>",
   "bugs": {
-    "url": "https://github.com/enonic/esbuild-plugin-copy-with-hash/issues"
+    "url": "https://github.com/enonic/npm-esbuild-plugin-copy-with-hash/issues"
   },
   "dependencies": {
     "@cjs-exporter/globby": "^13.1.3",
@@ -52,16 +52,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/enonic/esbuild-plugin-copy-with-hash.git"
+    "url": "git+https://github.com/enonic/npm-esbuild-plugin-copy-with-hash.git"
   },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "npx del lib",
     "prepack": "yarn install && yarn clean && yarn run test",
+    "prepublishOnly": "node setversion.cjs",
     "pretest": "yarn run build",
     "test": "jest --coverage"
   },
   "types": "lib/index.d.ts",
-  "version": "0.0.1"
+  "version": "0.0.0"
 }
