@@ -57,9 +57,8 @@ Type: `Boolean`
 
 Default: `true`
 
-When addHashesToFileNames is set to false, the contenthash is not added to the filenames, but the manifest file will still contain the content hashes.
-
-This is useful when copying files to the assets folder in Enonic XP and "double" hosting them as static assets under another virtual path, for example _static.
+Whether or not to add the content hashes to the filenames.
+This option does NOT affect the content of the manifest file.
 
 ### `options?.context`
 
