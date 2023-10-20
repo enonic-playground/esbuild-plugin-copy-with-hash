@@ -51,6 +51,15 @@ export default defineConfig((options) => {
 
 ## Options
 
+### `options?.addHashesToFileNames`
+
+Type: `Boolean`
+
+Default: `true`
+
+Whether or not to add the content hashes to the filenames.
+This option does NOT affect the content of the manifest file.
+
 ### `options?.context`
 
 Type: `String`

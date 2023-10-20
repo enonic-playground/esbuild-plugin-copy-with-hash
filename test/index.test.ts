@@ -1,6 +1,7 @@
 import type { CopyWithHashPluginOptions } from '../src/index.d';
 
 import {
+	beforeEach,
 	describe,
 	expect,
 	test,
@@ -16,12 +17,13 @@ import { join } from 'path';
 import { rimrafSync } from 'rimraf';
 import copyWithHashPlugin from '../src/index';
 
+const DEFAULT_OUT_DIR = 'test/output';
 
 function buildOptions(pluginOptions: CopyWithHashPluginOptions, overrideBuildOptions = {}) {
 	const defaultBuildOptions = {
 		bundle: true,
 		entryPoints: [],
-		outdir: 'test/output',
+		outdir: DEFAULT_OUT_DIR,
 		logLevel: 'silent',
 		logLimit: 0,
 		plugins: [copyWithHashPlugin(pluginOptions)],
@@ -48,15 +50,46 @@ describe('copyWithHashPlugin', () => {
 	});
 
 	test('it should handle string pattern', async () => {
+		const manifest = 'myManifest.json';
+		const to = 'subDir';
 		await require('esbuild').build(buildOptions({
 			context: 'node_modules',
-			manifest: 'myManifest.json',
+			manifest,
 			patterns: [
 				'esbuild/*.js',
 			],
-			to: 'subDir',
+			to,
 		}));
-		expect(existsSync('test/output/subDir/myManifest.json')).toBe(true);
+		const manifestPath = join(DEFAULT_OUT_DIR, to, manifest);
+		expect(existsSync(manifestPath)).toBe(true);
+		const buffer = readFileSync(manifestPath);
+		const obj = JSON.parse(buffer.toString());
+		const withOutHash = 'esbuild/install.js';
+		const withHash = obj[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, to, withOutHash))).toBe(false);
+		expect(existsSync(join(DEFAULT_OUT_DIR, to, withHash))).toBe(true);
+	});
+
+	test('it should handle addHashesToFileNames: false', async () => {
+		const manifest = 'myManifest.json';
+		const to = 'subDir';
+		await require('esbuild').build(buildOptions({
+			addHashesToFileNames: false,
+			context: 'node_modules',
+			manifest,
+			patterns: [
+				'esbuild/*.js',
+			],
+			to,
+		}));
+		const manifestPath = join(DEFAULT_OUT_DIR, to, manifest);
+		expect(existsSync(manifestPath)).toBe(true);
+		const buffer = readFileSync(manifestPath);
+		const obj = JSON.parse(buffer.toString());
+		const withOutHash = 'esbuild/install.js';
+		const withHash = obj[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, to, withOutHash))).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, to, withHash))).toBe(false);
 	});
 
 	test('it should hand object pattern', async () => {

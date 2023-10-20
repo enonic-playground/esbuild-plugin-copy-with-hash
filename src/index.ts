@@ -50,6 +50,7 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 		const format = build.initialOptions.define?.['TSUP_FORMAT'].replace(/"/g,'').toUpperCase() || '';
 		const logger = createLogger(PLUGIN_NAME);
 		const {
+			addHashesToFileNames = true,
 			context: rootContext = '',
 			hash = (fileBuffer: Buffer) => bigint2base(XXH64(fileBuffer), BASE_36),
 			manifest = MANIFEST_DEFAULT,
@@ -135,11 +136,12 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 					outDir,
 					rel
 				} = tasks[src];
-				const fileBuffer = readFileSync(src);
-				const contenthash = hash(fileBuffer);
 				const ext = extname(src);
 				const filebase = basename(src, ext);
-				const outFileName = `${filebase}-${contenthash}${ext}`;
+				const fileBuffer = readFileSync(src);
+				const contenthash = hash(fileBuffer);
+				const outFileNameWithHash = `${filebase}-${contenthash}${ext}`;
+				const outFileName = addHashesToFileNames ? outFileNameWithHash : `${filebase}${ext}`;
 				const outFilePath = join(outDir,outFileName);
 
 				if (existsSync(outFilePath)) {
@@ -167,7 +169,7 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 					files[outFilePath] = statSync(outFilePath).size;
 				} // if exist ... else ...
 
-				manifestObj[rel] = join(dirname(rel), outFileName);
+				manifestObj[rel] = join(dirname(rel), outFileNameWithHash);
 			} // for tasks
 
 			if (JSON.stringify(manifestObj) !== manifestObjJson) {
