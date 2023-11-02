@@ -11,11 +11,12 @@ import {
 	statSync,
 	utimesSync,
 } from 'fs';
-import { join } from 'path';
+import { join } from 'path/posix';
 // import mockConsole from 'jest-mock-console';
 import { rimrafSync } from 'rimraf';
 import copyWithHashPlugin from '../src/index';
 
+const DEFAULT_OUT_DIR = 'test/output';
 
 function buildOptions(pluginOptions: CopyWithHashPluginOptions, overrideBuildOptions = {}) {
 	const defaultBuildOptions = {
@@ -224,6 +225,163 @@ describe('copyWithHashPlugin', () => {
 				}, {
 					logLevel: undefined,
 					logLimit: undefined
+				}
+			)
+		);
+		expect(existsSync('test/output/manifest.json')).toBe(true);
+	});
+
+	test("it should NOT copy sourcemap files when sourcemap is false", async () => {
+		const ext = '.js';
+		const base = 'index';
+		const dir = '@cjs-exporter/globby/dist';
+		const withOutHash = `${dir}/${base}${ext}`;
+		await require('esbuild').build(
+			buildOptions({
+				context: 'node_modules',
+				patterns: [ `${dir}/*.*` ]
+			}, {
+				sourcemap: false
+			})
+		);
+		expect(existsSync('test/output/manifest.json')).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, withOutHash))).toBe(false);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withOutHash}.map`))).toBe(false);
+
+		const manifestPath = join(DEFAULT_OUT_DIR, 'manifest.json');
+		const manifest = JSON.parse(readFileSync(manifestPath).toString());
+		const withHash = manifest[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, withHash))).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withHash}.map`))).toBe(false);
+	});
+
+	test("it should copy sourcemap files when sourcemap is true", async () => {
+		const ext = '.js';
+		const base = 'index';
+		const dir = '@cjs-exporter/globby/dist';
+		const withOutHash = `${dir}/${base}${ext}`;
+		await require('esbuild').build(
+			buildOptions({
+				context: 'node_modules',
+				patterns: [ `${dir}/*.*` ]
+			}, {
+				sourcemap: true // same as external
+			})
+		);
+		expect(existsSync('test/output/manifest.json')).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, withOutHash))).toBe(false);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withOutHash}.map`))).toBe(false);
+
+		const manifestPath = join(DEFAULT_OUT_DIR, 'manifest.json');
+		const manifest = JSON.parse(readFileSync(manifestPath).toString());
+		const withHash = manifest[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, withHash))).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withHash}.map`))).toBe(true);
+	});
+
+	test("it should copy sourcemap files when sourcemap is both", async () => {
+		const ext = '.js';
+		const base = 'index';
+		const dir = '@cjs-exporter/globby/dist';
+		const withOutHash = `${dir}/${base}${ext}`;
+		await require('esbuild').build(
+			buildOptions({
+				context: 'node_modules',
+				patterns: [ `${dir}/*.*` ]
+			}, {
+				sourcemap: 'both' // Combination of inline and external
+			})
+		);
+		expect(existsSync('test/output/manifest.json')).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, withOutHash))).toBe(false);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withOutHash}.map`))).toBe(false);
+
+		const manifestPath = join(DEFAULT_OUT_DIR, 'manifest.json');
+		const manifest = JSON.parse(readFileSync(manifestPath).toString());
+		const withHash = manifest[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, withHash))).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withHash}.map`))).toBe(true);
+	});
+
+	test("it should copy sourcemap files when sourcemap is external", async () => {
+		const ext = '.js';
+		const base = 'index';
+		const dir = '@cjs-exporter/globby/dist';
+		const withOutHash = `${dir}/${base}${ext}`;
+		await require('esbuild').build(
+			buildOptions({
+				context: 'node_modules',
+				patterns: [ `${dir}/*.*` ]
+			}, {
+				sourcemap: 'external' // Same as linked, but without the //# sourceMappingURL=
+			})
+		);
+		expect(existsSync('test/output/manifest.json')).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, withOutHash))).toBe(false);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withOutHash}.map`))).toBe(false);
+
+		const manifestPath = join(DEFAULT_OUT_DIR, 'manifest.json');
+		const manifest = JSON.parse(readFileSync(manifestPath).toString());
+		const withHash = manifest[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, withHash))).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withHash}.map`))).toBe(true);
+	});
+
+	test("it should NOT copy sourcemap files when sourcemap is inline", async () => {
+		const ext = '.js';
+		const base = 'index';
+		const dir = '@cjs-exporter/globby/dist';
+		const withOutHash = `${dir}/${base}${ext}`;
+		await require('esbuild').build(
+			buildOptions({
+				context: 'node_modules',
+				patterns: [ `${dir}/*.*` ]
+			}, {
+				sourcemap: 'inline'
+			})
+		);
+		expect(existsSync('test/output/manifest.json')).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, withOutHash))).toBe(false);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withOutHash}.map`))).toBe(false);
+
+		const manifestPath = join(DEFAULT_OUT_DIR, 'manifest.json');
+		const manifest = JSON.parse(readFileSync(manifestPath).toString());
+		const withHash = manifest[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, withHash))).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withHash}.map`))).toBe(false);
+	});
+
+	test("it should copy sourcemap files when sourcemap is linked", async () => {
+		const ext = '.js';
+		const base = 'index';
+		const dir = '@cjs-exporter/globby/dist';
+		const withOutHash = `${dir}/${base}${ext}`;
+		await require('esbuild').build(
+			buildOptions({
+				context: 'node_modules',
+				patterns: [ `${dir}/*.*` ]
+			}, {
+				sourcemap: 'linked'
+			})
+		);
+		expect(existsSync('test/output/manifest.json')).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, withOutHash))).toBe(false);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withOutHash}.map`))).toBe(false);
+
+		const manifestPath = join(DEFAULT_OUT_DIR, 'manifest.json');
+		const manifest = JSON.parse(readFileSync(manifestPath).toString());
+		const withHash = manifest[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, withHash))).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withHash}.map`))).toBe(true);
+	});
+
+	test('it should continue without warning when a map file is missing', async () => {
+		await require('esbuild').build(
+			buildOptions(
+				{
+					patterns: [ 'node_modules/esbuild/*.js' ]
+				}, {
+					sourcemap: 'external'
 				}
 			)
 		);

@@ -26,7 +26,6 @@ import {
 	join,
 	relative,
 } from 'path/posix';
-// import { print } from 'q-i';
 import bigint2base from './bigint2base';
 import { createLogger, setSilent } from './log';
 import { reportSize } from './reportSize';
@@ -42,14 +41,17 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 	setup(build: PluginBuild) {
 		const {
 			// absWorkingDir = process.cwd(),
+			logLevel,
 			outdir,
 			outfile,
-			logLevel
+			sourcemap
 		} = build.initialOptions;
 		setSilent(logLevel === 'silent');
 		const format = build.initialOptions.define?.['TSUP_FORMAT'].replace(/"/g,'').toUpperCase() || '';
+		const cpyMapFiles = sourcemap === true || sourcemap === 'external' || sourcemap === 'linked' || sourcemap === 'both';
 		const logger = createLogger(PLUGIN_NAME);
 		const {
+			addHashesToFileNames = true,
 			context: rootContext = '',
 			hash = (fileBuffer: Buffer) => bigint2base(XXH64(fileBuffer), BASE_36),
 			manifest = MANIFEST_DEFAULT,
@@ -131,6 +133,16 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 
 			for (let i = 0; i < keys.length; i++) {
 				const src = keys[i];
+				if (
+					extname(src) === '.map'
+					&& (
+						!sourcemap // Skip map files when sourcemap: false
+						|| cpyMapFiles // Map files are handled when the corresponding js file is processed
+					)
+				) {
+					continue;
+				}
+
 				const {
 					outDir,
 					rel
@@ -139,35 +151,69 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 				const contenthash = hash(fileBuffer);
 				const ext = extname(src);
 				const filebase = basename(src, ext);
-				const outFileName = `${filebase}-${contenthash}${ext}`;
+				const outFileNameWithHash = `${filebase}-${contenthash}${ext}`;
+				const outFileName = addHashesToFileNames ? outFileNameWithHash : `${filebase}${ext}`;
 				const outFilePath = join(outDir,outFileName);
 
-				if (existsSync(outFilePath)) {
-					const s = statSync(src);
-					const t = statSync(outFilePath);
+				const filesToCopy = [{
+					fileNameWithHash: outFileNameWithHash,
+					fromRelFilePath: src,
+					toFullFilePath: outFilePath,
+					toRelFilePath: rel
+				}];
 
-					if (s.mtime.getTime() !== t.mtime.getTime()) {
-						cpSync(src, outFilePath, {
-							dereference: true,
-							errorOnExist: false,
-							force: true,
-							preserveTimestamps: true
-						});
-						files[outFilePath] = statSync(outFilePath).size;
-					} else {
-						files[`(unchanged) ${outFilePath}`] = statSync(outFilePath).size;
-					} // if modified ... else ...
-				} else {
-					cpSync(src, outFilePath, {
-						dereference: true,
-						errorOnExist: false,
-						force: true,
-						preserveTimestamps: true
+				if (cpyMapFiles) {
+					// NOTE: could read the js file and get the //# sourceMappingURL=... and check that the file exists
+					filesToCopy.push({
+						fileNameWithHash: `${outFileNameWithHash}.map`,
+						fromRelFilePath: `${src}.map`,
+						toFullFilePath: `${outFilePath}.map`,
+						toRelFilePath: `${rel}.map`
 					});
-					files[outFilePath] = statSync(outFilePath).size;
-				} // if exist ... else ...
+				}
 
-				manifestObj[rel] = join(dirname(rel), outFileName);
+				for (let j = 0; j < filesToCopy.length; j++) {
+					const {
+						fileNameWithHash,
+						fromRelFilePath,
+						toFullFilePath,
+						toRelFilePath
+					} = filesToCopy[j];
+					try {
+						if (existsSync(toFullFilePath)) {
+							const s = statSync(fromRelFilePath);
+							const t = statSync(toFullFilePath);
+
+							if (s.mtime.getTime() !== t.mtime.getTime()) {
+								cpSync(fromRelFilePath, toFullFilePath, {
+									dereference: true,
+									errorOnExist: false,
+									force: true,
+									preserveTimestamps: true
+								});
+								files[toFullFilePath] = statSync(toFullFilePath).size;
+							} else {
+								files[`(unchanged) ${toFullFilePath}`] = statSync(toFullFilePath).size;
+							} // if modified ... else ...
+						} else {
+							cpSync(fromRelFilePath, toFullFilePath, {
+								dereference: true,
+								errorOnExist: false,
+								force: true,
+								preserveTimestamps: true
+							});
+							files[toFullFilePath] = statSync(toFullFilePath).size;
+						} // if exist ... else ...
+
+						manifestObj[toRelFilePath] = join(dirname(toRelFilePath), fileNameWithHash);
+						// manifestObj[rel] = join(dirname(rel), outFileName);
+					} catch (e) {
+						/* istanbul ignore if */ // The else branch is not ignored :)
+						if (!fromRelFilePath.endsWith('.map')) { // Ignore missing map files
+							throw e; // Rethrow (Only possible if src file is deleted while plugin is working)
+						}
+					}
+				} // for filesToCopy
 			} // for tasks
 
 			if (JSON.stringify(manifestObj) !== manifestObjJson) {
