@@ -387,4 +387,30 @@ describe('copyWithHashPlugin', () => {
 		);
 		expect(existsSync('test/output/manifest.json')).toBe(true);
 	});
+
+	test('it should handle addHashesToFileNames: false', async () => {
+		const ext = '.js';
+		const base = 'index';
+		const dir = '@cjs-exporter/globby/dist';
+		const withOutHash = `${dir}/${base}${ext}`;
+		await require('esbuild').build(
+			buildOptions({
+				addHashesToFileNames: false,
+				context: 'node_modules',
+				patterns: [ `${dir}/*.*` ]
+			}, {
+				sourcemap: 'linked'
+			})
+		);
+		expect(existsSync('test/output/manifest.json')).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, withOutHash))).toBe(true);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withOutHash}.map`))).toBe(true);
+
+		const manifestPath = join(DEFAULT_OUT_DIR, 'manifest.json');
+		const manifest = JSON.parse(readFileSync(manifestPath).toString());
+		const withHash = manifest[withOutHash]
+		expect(existsSync(join(DEFAULT_OUT_DIR, withHash))).toBe(false);
+		expect(existsSync(join(DEFAULT_OUT_DIR, `${withHash}.map`))).toBe(false);
+	});
+
 });

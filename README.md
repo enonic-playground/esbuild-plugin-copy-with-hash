@@ -51,6 +51,16 @@ export default defineConfig((options) => {
 
 ## Options
 
+### `options?.addHashesToFileNames`
+
+Type: `Boolean`
+
+Default: `true`
+
+When addHashesToFileNames is set to false, the contenthash is not added to the filenames, but the manifest file will still contain the content hashes.
+
+This is useful when copying files to the assets folder in Enonic XP and "double" hosting them as static assets under another virtual path, for example _static.
+
 ### `options?.context`
 
 Type: `String`
