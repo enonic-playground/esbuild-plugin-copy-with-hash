@@ -206,7 +206,6 @@ export = (options: CopyWithHashPluginOptions): Plugin => ({
 						} // if exist ... else ...
 
 						manifestObj[toRelFilePath] = join(dirname(toRelFilePath), fileNameWithHash);
-						// manifestObj[rel] = join(dirname(rel), outFileName);
 					} catch (e) {
 						/* istanbul ignore if */ // The else branch is not ignored :)
 						if (!fromRelFilePath.endsWith('.map')) { // Ignore missing map files
