@@ -31,8 +31,10 @@
 		// "noUncheckedIndexedAccess": true,            /* Include 'undefined' in index signature results */
 		"noPropertyAccessFromIndexSignature": true,  /* Require undeclared properties from index signatures to use element accesses. */
 	},
-	"include": ["src/**/*.ts"],
-	// "exclude": [
-	// 	"node_modules"
-	// ],
+	"include": [
+		"src/**/*.ts"
+	],
+	"exclude": [
+		"test/**/*.*" // Shouldn't matter since it's not in include anyway.
+	],
 }

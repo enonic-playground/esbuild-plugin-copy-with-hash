@@ -1,0 +1,14 @@
+{ // https://www.typescriptlang.org/tsconfig
+	"compilerOptions": {
+		"alwaysStrict": false,
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"noEmit": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"rootDir": "..",
+		"sourceMap": true, // needed to get correct line numbers
+		"strict": false,
+	},
+	"include": ["**/*.ts"],
+}
